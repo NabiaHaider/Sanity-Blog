@@ -3,26 +3,26 @@ import Image from "next/image";
 import { urlFor } from "@/sanity/lib/image";
 import { PortableText } from "next-sanity";
 import { components } from "@/app/components/CustomComponent";
+import { TypedObject } from "@portabletext/types"; // Import TypedObject
 
- export const revalidate = 60; //seconds
+export const revalidate = 60; // seconds
 
-export async function generateStaticParams(){
+export async function generateStaticParams() {
   const query = `*[_type == 'post']{
-  "slug":slug.current
+  "slug": slug.current
 }`;
-const slugs = await client.fetch(query);
-const slugRoutes:string[] = slugs.map((slug:{slug:string})=>(slug.slug));
-// console.log(slugRoutes)
-return slugRoutes.map((slug:string)=>({slug}))
+  const slugs = await client.fetch(query);
+  const slugRoutes: string[] = slugs.map((slug: { slug: string }) => slug.slug);
+  return slugRoutes.map((slug: string) => ({ slug }));
 }
 
-type SegmentParams<T extends Object = any> = T extends Record<string, any>
+type SegmentParams<T extends object = Record<string, unknown>> = T extends Record<string, unknown>
   ? { [K in keyof T]: T[K] extends string ? string | string[] | undefined : never }
   : T;
 
 export interface PageProps {
   params?: SegmentParams<{ slug: string }>;
-  searchParams?: any;
+  searchParams?: Record<string, string | string[] | undefined>; // Avoid `any`
 }
 
 export default async function Page({ params }: PageProps) {
@@ -34,8 +34,14 @@ export default async function Page({ params }: PageProps) {
     title, summary, image, content, author->{bio, image, name}
   }`;
 
-  // Fetch the data directly in the component
-  const post = await client.fetch(query, { slug: params.slug });
+  // Type the response properly
+  const post: {
+    title: string;
+    summary: string;
+    image: string;
+    content: TypedObject | TypedObject[]; // Ensure content is typed correctly
+    author: { bio: string; image: string; name: string };
+  }[] = await client.fetch(query, { slug: params.slug });
 
   if (!post.length) {
     return <div>Post not found</div>;
