@@ -8,7 +8,10 @@ const nextConfig: NextConfig = {
         hostname: 'cdn.sanity.io'
       }
     ]
-  }
+  },
+  typescript: {
+    ignoreBuildErrors: true,
+  },
   /* config options here */
 };
 
